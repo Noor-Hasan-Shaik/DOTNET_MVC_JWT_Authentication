@@ -1,0 +1,111 @@
+﻿
+@{
+    ViewBag.Title = "Register";
+}
+
+<h2>Register</h2>
+
+<form id="registerForm">
+    <input type="text" id="username" placeholder="Username" required /><br><br>
+    <input type="email" id="email" placeholder="Email" required /><br><br>
+    <input type="password" id="password" placeholder="Password" required /><br><br>
+    <button type="submit">Register</button>
+</form>
+
+<p id="message"></p>
+<p id="token_details"></p>
+
+<button id="protected_button" onclick="protectedResource()">Call Protected API</button>
+<p id="protected_data"></p>
+
+
+<button id="protected_button2" onclick="protectedResource2()">Call Protected API</button>
+<p id="protected_data2"></p>
+
+<script>
+    document.getElementById("registerForm").addEventListener("submit", function (e) {
+        e.preventDefault();
+
+        const data = {
+            username: document.getElementById("username").value,
+            email: document.getElementById("email").value,
+            password: document.getElementById("password").value
+        };
+        fetch('/Home/Register', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(data)
+        })
+            .then(res => res.json())
+            .then(result => {
+                const msg = document.getElementById("message");
+                msg.textContent = result.message;
+                msg.style.color = result.success ? "green" : "red";
+                const tokenDetails = document.getElementById("token_details");
+                tokenDetails.textContent = result.token ? `Token: ${result.token}` : "";
+                //if (result.success) {
+                localStorage.setItem("jwtToken", result.token);
+                //document.getElementById("registerForm").reset();
+
+                if (result.success) document.getElementById("registerForm").reset();
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById("message").textContent = "Error registering user.";
+            });
+    });
+
+
+    function protectedResource() {
+        const token = localStorage.getItem("jwtToken");
+
+        //if (!token) {
+        //    alert("No token found. Please register or log in first.");
+        //    return;
+        //}
+
+        fetch('/Home/ProtectedData', {
+            method: 'GET',
+            headers: {
+                'Authorization': 'Bearer ' + token
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                const protectedData = document.getElementById("protected_data");
+                protectedData.textContent = data.message || "No data returned.";
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById("protected_data").textContent = "Error fetching protected data.";
+            });
+    }
+
+    function protectedResource2() {
+        const token = localStorage.getItem("jwtToken");
+
+        //if (!token) {
+        //    alert("No token found. Please register or log in first.");
+        //    return;
+        //}
+
+        fetch('/Home/ProtectedData2', {
+            method: 'GET',
+            headers: {
+                'Authorization': 'Bearer ' + token
+            }
+        })
+            .then(res => res.json())
+            .then(data => {
+                const protectedData = document.getElementById("protected_data2");
+                protectedData.textContent = data.message || "No data returned.";
+            })
+            .catch(err => {
+                console.error(err);
+                document.getElementById("protected_data").textContent = "Error fetching protected data.";
+            });
+    }
+
+</script>
